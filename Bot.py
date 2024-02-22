@@ -51,7 +51,7 @@ async def Status():
 async def BeforeStatus():
     await client.wait_until_ready()
 
-@client.command(description="Status Command for the Bot",)
+@client.command(description="Status Command for the Bot")
 @commands.check(admin)
 async def status(ctx):
     global ts, tm, th, td
@@ -68,19 +68,19 @@ async def status(ctx):
 async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
 
-@client.command(description="kicks a user from the Server",)
+@client.command(description="kicks a user from the Server")
 @commands.check(admin)
 async def kick(ctx, member : nextcord.Member, *, reason=None):
     await member.kick(reason=reason)
     await ctx.send(f'{member.mention} has been kicked')
 
-@client.command(description="Bonk a User from the Server",)
+@client.command(description="Bonk a User from the Server")
 @commands.check(admin)
 async def ban(ctx, member : nextcord.Member, *, reason=None):
     await member.ban(reason=reason)
     await ctx.send(f'{member.mention} has been banned')
 
-@client.command(description='unban a User',)
+@client.command(description='unban a User')
 @commands.check(admin)
 async def unban(ctx, *, member):
     banned_users = await ctx.guild.bans()
@@ -109,13 +109,13 @@ async def help(ctx):
         embed.add_field(name=f"!{command.name}{command.signature if command.signature is not None else ""}", value=description)
     await ctx.send(embed=embed)
 
-@client.command(description="Shows the Avatar of the User",)
+@client.command(description="Shows the Avatar of the User")
 async def avatar(ctx, member : nextcord.Member):
     embed = nextcord.Embed(title=f"{member.name}'s Avatar", color=0xe74c3c)
     embed.set_image(url=member.avatar_url)
     await ctx.send(embed=embed)
 
-@client.command(description="Locks the Chat in the Channel and in the Server ",)
+@client.command(description="Locks the Chat in the Channel and in the Server ")
 @commands.check(admin)
 async def lockdown(ctx, channel: nextcord.TextChannel=None, setting = None):
     if setting == "--server":
@@ -139,7 +139,7 @@ async def unlock(ctx, channel: nextcord.TextChannel=None, setting = None):
     await channel.set_permissions(ctx.guild.default_role, send_messages=True, read_message_history=True, reason=f"{ctx.author.name} has enabled the Chatting in {channel.name}")
     await ctx.send(f"Chatting has been enabled in {channel.mention}")
 
-@client.command(description="Mutes a User",)
+@client.command(description="Mutes a User")
 @commands.check(admin)
 async def mute(ctx, member : nextcord.Member, *, reason=None):
     role = nextcord.utils.get(ctx.guild.roles, name="Muted")
@@ -150,14 +150,14 @@ async def mute(ctx, member : nextcord.Member, *, reason=None):
     await member.add_roles(role, reason=reason)
     await ctx.send(f'{member.mention} has been muted')
 
-@client.command(description="Unmutes a User",)
+@client.command(description="Unmutes a User")
 @commands.check(admin)
 async def unmute(ctx, member : nextcord.Member):
     role = nextcord.utils.get(ctx.guild.roles, name="Muted")
     await member.remove_roles(role)
     await ctx.send(f'{member.mention} has been unmuted')
 
-@client.command(description="Shows the Server Info",)
+@client.command(description="Shows the Server Info")
 async def serverinfo(ctx):
     embed = nextcord.Embed(title=f"{ctx.guild.name}", color=0xe74c3c)
     embed.set_thumbnail(url=ctx.guild.icon_url)
@@ -167,7 +167,7 @@ async def serverinfo(ctx):
     embed.add_field(name="Created At", value=ctx.guild.created_at.strftime("%d-%m-%Y %H:%M:%S"), inline=True)
     await ctx.send(embed=embed)
 
-@client.command(description="Shows the User Info",)
+@client.command(description="Shows the User Info")
 async def userinfo(ctx, member : nextcord.Member):
     embed = nextcord.Embed(title=f"{member.name}", color=0xe74c3c)
     embed.set_thumbnail(url=member.avatar_url)
@@ -176,7 +176,7 @@ async def userinfo(ctx, member : nextcord.Member):
     embed.add_field(name="Joined At", value=member.joined_at.strftime("%d-%m-%Y %H:%M:%S"), inline=True)
     await ctx.send(embed=embed)
 
-@client.command(description="Shows a Meme",)
+@client.command(description="Shows a Meme")
 async def meme(ctx):
     memeApi = urllib.request.urlopen("https://meme-api.com/gimme")
     meme = loads(memeApi.read())
@@ -192,7 +192,7 @@ async def meme(ctx):
     embed.set_author(text=f"Meme by {memeAuthor} from r/{memeSubreddit} Link: {memeLink}")
     await ctx.send(embed=embed)
 
-@client.command(description="Shows the Weather of the City",)
+@client.command(description="Shows the Weather of the City")
 async def wetter(ctx, city):
     weatherApi = urllib.request.urlopen(f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WetterAPI}")
     weather = loads(weatherApi.read())
@@ -211,7 +211,7 @@ async def wetter(ctx, city):
     embed.add_field(name="Wind Speed", value=f"{weatherWindSpeed}m/s", inline=True)
     await ctx.send(embed=embed)
 
-@client.command()
+@client.command(description="This Command shows some League of Legends Stats from your Profile")
 async def league(ctx, summoner):#
     leagueApi = urllib.request.urlopen(f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summoner}?api_key={config['LeagueAPI']}")
     league = loads(leagueApi.read())
