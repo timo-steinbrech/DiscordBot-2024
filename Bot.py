@@ -5,6 +5,7 @@ from pathlib import Path
 import psutil
 import urllib
 import json
+import settings
 
 ts = 0
 tm = 0
@@ -13,7 +14,6 @@ td = 0
 
 # Load the token from the config file
 config = loads(Path('config.json').read_text())
-Token = config['Token']
 WetterAPI = config['WetterAPI']
 
 intents = nextcord.Intents.all()
@@ -31,13 +31,16 @@ client.remove_command('help')
 
 @client.event
 async def on_ready():
-    print(f'Logged in as {client.user.name}')
-    print(f'Bot ID: {client.user.id}')
-    print(f'Nextcord Version: {nextcord.__version__}')
-    print(f'shards: {client.shard_count}')
-    print(f'Latency: {round(client.latency * 1000)}ms')
-    print(f'Uptime: {td}d {th}h {tm}m {ts}s')
-    print("BOT IS READY")
+    print(f"We have logged in as {client.user}")
+    print(f"Bot ID: {client.user.id}")
+    print(f"Bot Name: {client.user.name}")
+    print(f"Bot Version: 1.0")
+    print(f"Bot Uptime: {td}d {th}h {tm}m {ts}s")
+    print(f"Bot Memory Usage: {psutil.virtual_memory().percent}%")
+    print(f"Bot CPU Usage: {psutil.cpu_percent()}%")
+    print(f"Bot RAM Usage: {round(psutil.virtual_memory().used / 1024**3, 2)}GB")
+    print(f"Bot Latency: {round(client.latency * 1000)}ms")
+    print(f"Bot is running on {client.guilds} servers")
 
     Status.start()
 
@@ -46,28 +49,6 @@ def admin(ctx):
         return True
     else:
         return False
-    
-#Prefix Command
-@client.command(description="Changes the Prefix of the Bot",)
-async def on_guild_join(guild):
-    with open('prefixes.json', 'r') as f:
-        prefixes = json.load(f)
-
-    prefixes[str(guild.id)] = '!'
-
-    with open('prefixes.json', 'w') as f:
-        json.dump(prefixes, f, indent=4)
-
-#Prefix Command
-@client.command(description="Changes the Prefix of the Bot",)
-async def on_guild_remove(guild):
-    with open('prefixes.json', 'r') as f:
-        prefixes = json.load(f)
-
-    prefixes.pop(str(guild.id))
-
-    with open('prefixes.json', 'w') as f:
-        json.dump(prefixes, f, indent=4)
 
 @tasks.loop(seconds=5.0)
 async def Status():
@@ -109,7 +90,31 @@ async def status(ctx):
 async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
 
+@client.event 
+async def on_message_delete(message):
+    if message.author.bot:
+        return
+    embed = nextcord.Embed(title=f"{message.author.name} with the ID: {message.author.id} has deleted a message", description=f"{message.content}", color=0xe74c3c)
+    embed.add_field(name="Author", value=message.author, inline=True)
+    embed.add_field(name="Channel", value=message.channel, inline=True)
+    embed.add_field(name="Message", value=message.content, inline=True)
+    channel = client.get_channel(1211762419085344768) #Channel ID needed
+    await channel.send(embed=embed)
 
+@client.event
+async def on_message_edit(message_before, message_after):
+    if message_before.author.bot:
+        return
+    embed = nextcord.Embed(title=f"{message_before.author.name} with the ID: {message_before.author.id} has edited a message", description=f"{message_before.content}", color=0xe74c3c)   
+    embed.add_field(name="Author", value=message_before.author, inline=True)
+    embed.add_field(name="Channel", value=message_before.channel, inline=True)
+    embed.add_field(name="Before", value=message_before.content, inline=True)
+    embed.add_field(name="After", value=message_after.content, inline=True)
+
+
+
+    channel = client.get_channel(1211762419085344768) #Channel ID needed
+    await channel.send(embed=embed)
 
 #Moderation Commands
 @client.command(description="kicks a user from the Server",)
@@ -313,44 +318,6 @@ async def wetter(ctx, city):
     embed.add_field(name="Wind Speed", value=f"{weatherWindSpeed}m/s", inline=True)
     await ctx.send(embed=embed)
 
-@client.command()
-async def league(ctx, summoner):#
-    leagueApi = urllib.request.urlopen(f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summoner}?api_key={config['LeagueAPI']}")
-    league = loads(leagueApi.read())
-
-    leagueId = league['id']
-    leagueName = league['name']
-    leagueLevel = league['summonerLevel']
-    leagueIconId = league['profileIconId']
-
-    embed = nextcord.Embed(title=f"{leagueName}", color=0xe74c3c)
-    embed.set_thumbnail(url=f"http://ddragon.leagueoflegends.com/cdn/11.16.1/img/profileicon/{leagueIconId}.png")
-    embed.add_field(name="Level", value=leagueLevel, inline=True)
-
-    leagueMasteryApi = urllib.request.urlopen(f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{leagueId}?api_key={config['LeagueAPI']}")
-    leagueMastery = loads(leagueMasteryApi.read())
-
-    leagueMasteryChampionId = leagueMastery[0]['championId']
-    leagueMasteryChampionPoints = leagueMastery[0]['championPoints']
-    leagueMasteryChampionLevel = leagueMastery[0]['championLevel']
-
-    embed.add_field(name="Mastery", value=f"Champion: {leagueMasteryChampionId} Points: {leagueMasteryChampionPoints} Level: {leagueMasteryChampionLevel}", inline=True)
-
-    leagueRankApi = urllib.request.urlopen(f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{leagueId}?api_key={config['LeagueAPI']}")
-    leagueRank = loads(leagueRankApi.read())
-
-    leagueRankTier = leagueRank[0]['tier']
-    leagueRankRank = leagueRank[0]['rank']
-    leagueRankLP = leagueRank[0]['leaguePoints']
-    leagueRankWins = leagueRank[0]['wins']
-    leagueRankLosses = leagueRank[0]['losses']
-
-    embed.add_field(name="Rank", value=f"{leagueRankTier} {leagueRankRank} {leagueRankLP}LP Wins: {leagueRankWins} Losses: {leagueRankLosses}", inline=True)
-    await ctx.send(embed=embed)
-
-
-
-
 #Error Handling very basic not the finished Error Handler but it works
 
 @client.event
@@ -389,4 +356,4 @@ async def on_command_error(ctx, error):
         await ctx.send("This command is disabled you cannot use it")
         return
 
-client.run(Token)
+client.run(settings.DISCORD_API_TOKEN)
